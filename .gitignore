@@ -1,0 +1,39 @@
+## Visual Studio / dotnet core gitignore
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bin/
+obj/
+
+# Visual Studio cache/options
+.vs/
+[Tt]est[Rr]esult*/
+[Bb]uild[Cc]ache/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Packages
+*.nupkg
+# NuGet Packages
+**/packages/
+**/project.assets.json
+**/project.lock.json
+
+# Publish output
+**/publish/
+
+# OS-specific files
+.DS_Store
+Thumbs.db

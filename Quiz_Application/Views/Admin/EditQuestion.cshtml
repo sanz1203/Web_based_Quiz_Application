@@ -1,0 +1,36 @@
+﻿@model Quiz_Application.Models.Entities.Question
+@{
+    ViewData["Title"] = "Edit Question";
+    var correctOptionId = (Guid)ViewBag.CorrectOptionId;
+}
+
+<h2>Edit Question</h2>
+
+<form asp-action="EditQuestion" method="post">
+    <input type="hidden" name="questionId" value="@Model.Id" />
+    <input type="hidden" name="quizId" value="@ViewBag.QuizId" />
+
+    <div class="mb-3">
+        <label class="form-label">Question Text</label>
+        <input name="Text" class="form-control" value="@Model.Text" required />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Options</label>
+        @for (int i = 0; i < Model.Options.Count; i++)
+        {
+            var opt = Model.Options[i];
+            <div class="input-group mb-2">
+                <div class="input-group-text">
+                    <input type="radio" name="CorrectOptionId" value="@opt.Id" @(opt.Id == correctOptionId ? "checked" : "") required />
+                </div>
+                <input type="text" class="form-control" name="Options" value="@opt.Text" required />
+            </div>
+        }
+        <div class="form-text">Select the correct option using the radio button.</div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Back</a>
+</form>
+

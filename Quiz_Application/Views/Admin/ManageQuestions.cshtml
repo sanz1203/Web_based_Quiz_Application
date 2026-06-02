@@ -1,0 +1,44 @@
+﻿@model List<Quiz_Application.Models.Entities.Question>
+@{
+    ViewData["Title"] = "Manage Questions";
+    var quizId = ViewBag.QuizId;
+}
+
+<h2>Manage Questions</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Question</th>
+            <th>Options</th>
+            <th>Correct Option</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var question in Model)
+        {
+            <tr>
+                <td>@question.Text</td>
+                <td>
+                    <ul>
+                        @foreach (var option in question.Options)
+                        {
+                            <li>@option.Text</li>
+                        }
+                    </ul>
+                </td>
+                <td>
+                    @question.Options.FirstOrDefault(o => o.Id == question.CorrectOptionId)?.Text
+                </td>
+                <td>
+                    <a asp-action="EditQuestion" asp-route-questionId="@question.Id" class="btn btn-sm btn-warning">Edit</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="AddQuestion" asp-route-quizId="@quizId" class="btn btn-success">Add New Question</a>
+<a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
+ 

@@ -1,0 +1,77 @@
+﻿@{
+    ViewData["Title"] = "Quiz Results";
+}
+
+<style>
+    .result-container {
+        max-width: 600px;
+        margin: 50px auto;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        text-align: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .result-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .score-highlight {
+        font-size: 36px;
+        font-weight: 800;
+        color: #4CAF50;
+        margin: 10px 0;
+    }
+
+    .info-section {
+        margin-top: 30px;
+        text-align: left;
+    }
+
+    .info-item {
+        margin: 10px 0;
+        font-size: 16px;
+    }
+
+        .info-item span {
+            font-weight: 600;
+            color: #444;
+        }
+
+    .retry-btn {
+        margin-top: 30px;
+        background-color: #007bff;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 6px;
+        color: white;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+        display: inline-block;
+    }
+
+        .retry-btn:hover {
+            background-color: #0056b3;
+        }
+</style>
+
+<div class="result-container">
+    <div class="result-title">🎉 Quiz Completed!</div>
+
+    <div class="score-highlight">
+        @ViewBag.Score / @ViewBag.TotalScore
+    </div>
+
+    <div class="info-section">
+        <div class="info-item"><span>Start Time:</span> @(ViewBag.StartTime ?? "N/A")</div>
+        <div class="info-item"><span>End Time:</span> @(ViewBag.EndTime ?? "N/A")</div>
+        <div class="info-item"><span>Duration:</span> @(ViewBag.Duration ?? "N/A")</div>
+    </div>
+
+    <a asp-controller="Quiz" asp-action="All" class="retry-btn">📚 Back to Quizzes</a>
+</div>

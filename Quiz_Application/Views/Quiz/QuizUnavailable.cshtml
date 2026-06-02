@@ -1,0 +1,14 @@
+﻿@{
+    ViewData["Title"] = "Quiz Unavailable";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5 text-center">
+    <div class="alert alert-warning shadow-sm p-4">
+        <h4 class="text-danger">🚫 Quiz Access Blocked</h4>
+        <p class="lead mt-3">@ViewBag.Message</p>
+        <a asp-action="All" asp-controller="Quiz" class="btn btn-outline-primary mt-4">🔙 Back to Quizzes</a>
+
+    </div>
+</div>
+

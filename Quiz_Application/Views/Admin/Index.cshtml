@@ -1,0 +1,59 @@
+﻿@model IEnumerable<Quiz_Application.Models.Entities.Quiz>
+
+@{
+    ViewData["Title"] = "Manage Quizzes";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4">📋 Quiz Management</h2>
+
+    @foreach (var quiz in Model)
+    {
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">@quiz.Title</h5>
+                <p class="card-text">@quiz.Description</p>
+                <p><strong>Start:</strong> @quiz.StartTime | <strong>End:</strong> @quiz.EndTime</p>
+                <p><strong>Status:</strong> @(quiz.IsPublished ? "Published ✅" : "Unpublished ❌")</p>
+
+                <!-- Methodology Upload Form -->
+                <form asp-action="UploadMethodology" asp-controller="Admin" method="post" enctype="multipart/form-data" class="mb-3">
+                    <input type="hidden" name="quizId" value="@quiz.Id" />
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <input type="file" name="methodologyFile" class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-outline-primary btn-sm">Upload Methodology</button>
+                        </div>
+                        @if (!string.IsNullOrEmpty(quiz.MethodologyFileName))
+                        {
+                            <div class="col">
+                                <small>
+                                    📄 Existing File:
+                                    <a href="~/uploads/@quiz.MethodologyFileName" target="_blank">@quiz.MethodologyFileName</a>
+                                </small>
+                            </div>
+                        }
+                    </div>
+                </form>
+
+                <div class="d-flex gap-2">
+                    <a asp-action="AddQuestion" asp-route-quizId="@quiz.Id" class="btn btn-sm btn-success">➕ Add Question</a>
+                    <a asp-action="ManageQuestions" asp-route-quizId="@quiz.Id" class="btn btn-sm btn-secondary">🧩 Manage Questions</a>
+                    <a asp-action="EditQuiz" asp-route-id="@quiz.Id" class="btn btn-sm btn-warning">✏️ Edit</a>
+                    <form asp-action="TogglePublish" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@quiz.Id" />
+                        <button type="submit" class="btn btn-sm btn-outline-dark">
+                            @(quiz.IsPublished ? "Unpublish" : "Publish")
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
+    <a asp-action="CreateQuiz" class="btn btn-primary mt-3">➕ Create New Quiz</a>
+</div>
+

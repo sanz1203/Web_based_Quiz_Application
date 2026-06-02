@@ -1,0 +1,11 @@
+﻿@{
+    ViewData["Title"] = "Access Denied";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5 text-center">
+    <h2 class="text-danger">🚫 Access Denied</h2>
+    <p class="lead">@TempData["ErrorMessage"]</p>
+    <a asp-action="Index" asp-controller="Quiz" class="btn btn-primary mt-3">Go Back</a>
+</div>
+

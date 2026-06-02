@@ -1,0 +1,110 @@
+﻿@model List<Quiz_Application.Models.Entities.Quiz>
+
+@{
+    ViewData["Title"] = "Available Quizzes";
+}
+
+<style>
+    body {
+        background-color: #f0f4f8;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .quiz-container {
+        max-width: 1100px;
+        margin: auto;
+        padding: 2rem 1rem;
+    }
+
+    .quiz-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+        .quiz-header h2 {
+            font-size: 2.5rem;
+            color: #0d6efd;
+            font-weight: 700;
+        }
+
+    .quiz-card {
+        background-color: white;
+        border: 2px solid #0d6efd;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    }
+
+        .quiz-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-color: #0a58ca;
+        }
+
+    .quiz-title {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .quiz-desc {
+        font-size: 1rem;
+        color: #555;
+        margin: 0.5rem 0;
+    }
+
+    .quiz-time {
+        font-size: 0.95rem;
+        color: #666;
+    }
+
+    .start-btn {
+        margin-top: 1rem;
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.2rem;
+        border-radius: 5px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+        transition: background-color 0.3s ease;
+    }
+
+        .start-btn:hover {
+            background-color: #0a58ca;
+            text-decoration: none;
+        }
+
+</style>
+
+<div class="quiz-container">
+    <div class="quiz-header">
+        <h2>Available Quizzes</h2>
+    </div>
+
+    @if (Model.Any())
+    {
+        foreach (var quiz in Model)
+        {
+            <div class="quiz-card">
+                <div class="quiz-title">@quiz.Title</div>
+                <div class="quiz-desc">@quiz.Description</div>
+                <div class="quiz-time">
+                    🕒 @quiz.StartTime.ToString("dd MMM yyyy, hh:mm tt") –
+                    @quiz.EndTime.ToString("dd MMM yyyy, hh:mm tt")
+                </div>
+                <a class="start-btn" asp-action="Attempt" asp-route-id="@quiz.Id">Start Quiz</a>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            No quizzes available at the moment.
+        </div>
+    }
+</div>
+
