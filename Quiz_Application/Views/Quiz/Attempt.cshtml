@@ -1,102 +1,40 @@
-﻿@model Quiz_Application.Models.ViewModels.QuizViewModel
-
+@model Quiz_Application.Models.ViewModels.QuizViewModel
 @{
     ViewData["Title"] = "Attempt Quiz";
+    Layout = "~/Views/Shared/_Layout.cshtml";
     int quizDurationMinutes = ViewBag.QuizDurationMinutes ?? 30; // default to 30 if not set
 }
 
-<style>
-    body {
-        background-color: #fefefe;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    .quiz-heading {
-        color: #1a237e;
-        font-weight: bold;
-    }
-
-    .quiz-card {
-        background-color: #f5f7fa;
-        border-left: 5px solid #1a237e;
-        border-radius: 10px;
-    }
-
-    .option-box {
-        background-color: #e8f0fe;
-        border-radius: 6px;
-        padding: 12px 16px;
-        margin-bottom: 10px;
-        cursor: pointer;
-        position: relative;
-        transition: all 0.2s ease-in-out;
-    }
-
-        .option-box:hover {
-            background-color: #d7e3fc;
-        }
-
-        .option-box input[type="radio"] {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            accent-color: #1a237e;
-            width: 18px;
-            height: 18px;
-        }
-
-    .option-label {
-        display: block;
-        padding-left: 36px;
-        font-size: 16px;
-        color: #333;
-    }
-
-    .submit-btn {
-        background-color: #1a237e;
-        border: none;
-        color: white;
-        padding: 10px 25px;
-        font-size: 18px;
-        border-radius: 5px;
-    }
-
-        .submit-btn:hover {
-            background-color: #0d1b5f;
-        }
-
-    .timer-box {
-        text-align: center;
-        margin-bottom: 20px;
-        font-size: 20px;
-        font-weight: bold;
-        color: #d32f2f;
-    }
-</style>
-
-<div class="container mt-5">
-    <div class="text-center mb-4">
-        <h2 class="quiz-heading">📝 Attempt Quiz</h2>
-        <p class="text-muted">Answer the following questions carefully before time runs out.</p>
+<div class="container py-5" style="max-width: 800px;">
+    <div class="text-center mb-5">
+        <h2 class="fw-extrabold text-primary" style="font-size: 2.25rem; letter-spacing: -0.03em; color: var(--brand-primary);">📝 Active Assessment</h2>
+        <p class="text-muted">Read each question carefully and select the correct option before the timer expires.</p>
     </div>
 
-    <!-- ⏱️ Timer Display -->
-    <div class="timer-box">
-        Time Remaining: <span id="timer">--:--</span>
+    <!-- ⏱️ Premium Timer Progress Gauge -->
+    <div class="timer-container">
+        <div class="timer-label">
+            ⏳ <span>Time Remaining</span>
+        </div>
+        <div class="timer-progress-bg">
+            <div id="timer-progress" class="timer-progress-bar" style="width: 100%;"></div>
+        </div>
+        <div id="timer" class="timer-clock">--:--</div>
     </div>
 
-    <form asp-action="Submit" method="post" id="quizForm">
+    <form asp-action="Submit" method="post" id="quizForm" class="mt-4">
         <input type="hidden" name="quizId" value="@Model.QuizId" />
 
         @for (int i = 0; i < Model.Questions.Count; i++)
         {
             var question = Model.Questions[i];
 
-            <div class="card quiz-card mb-4 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title text-dark">Q@(i + 1): @question.Text</h5>
+            <div class="question-card">
+                <h5 class="question-text">
+                    <span style="color: var(--brand-primary); font-weight: 800; margin-right: 4px;">Q@(i + 1).</span> @question.Text
+                </h5>
 
+                <div class="options-grid">
                     @foreach (var option in question.Options)
                     {
                         var inputId = $"question_{i}_option_{option.Value}";
@@ -104,8 +42,7 @@
                             <input type="radio"
                                    id="@inputId"
                                    name="userAnswers[@question.Id]"
-                                   value="@option.Value"
-                                   required />
+                                   value="@option.Value" />
                             <span class="option-label">@option.Text</span>
                         </label>
                     }
@@ -113,15 +50,15 @@
             </div>
         }
 
-        <div class="text-center">
-            <button type="submit" class="submit-btn">Submit ✅</button>
+        <div class="text-center mt-5">
+            <button type="submit" class="btn-premium px-5 py-3">Submit Quiz ✅</button>
         </div>
     </form>
 </div>
 
 @section Scripts {
     <script>
-        // Set duration from server
+        // Visual Countdown Timer
         const totalSeconds = @(quizDurationMinutes) * 60;
         let secondsLeft = totalSeconds;
 
@@ -130,9 +67,20 @@
             const seconds = secondsLeft % 60;
             document.getElementById("timer").innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
+            // Calculate progress bar percent
+            const percentLeft = (secondsLeft / totalSeconds) * 100;
+            const progress = document.getElementById("timer-progress");
+            progress.style.width = `${percentLeft}%`;
+
+            // Turn progress bar red under 20%
+            if (percentLeft <= 20) {
+                progress.style.background = "var(--brand-danger)";
+                document.getElementById("timer").style.color = "var(--brand-danger)";
+            }
+
             if (secondsLeft <= 0) {
                 clearInterval(timerInterval);
-                alert("⏱️ Time is up! Submitting your quiz...");
+                alert("⏱️ Time is up! Submitting your quiz automatically...");
                 document.getElementById("quizForm").submit();
             }
 
@@ -141,6 +89,35 @@
 
         const timerInterval = setInterval(updateTimer, 1000);
         updateTimer(); // run immediately
+
+        // Dynamic Option Box Highlights
+        document.addEventListener("DOMContentLoaded", function () {
+            const radioButtons = document.querySelectorAll('.option-box input[type="radio"]');
+            
+            // Handle initial state if preselected
+            radioButtons.forEach(radio => {
+                if (radio.checked) {
+                    radio.closest('.option-box').classList.add('selected-option');
+                }
+            });
+
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    // Find options grid containing this element
+                    const grid = this.closest('.options-grid');
+                    if (grid) {
+                        // Clear active state of sibling option cards
+                        grid.querySelectorAll('.option-box').forEach(box => {
+                            box.classList.remove('selected-option');
+                        });
+                        // Add active highlight state to checked card
+                        const parentBox = this.closest('.option-box');
+                        if (parentBox) {
+                            parentBox.classList.add('selected-option');
+                        }
+                    }
+                });
+            });
+        });
     </script>
 }
-

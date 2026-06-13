@@ -1,12 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Quiz_Application.Data;
 using Quiz_Application.Models.Entities;
-using ClosedXML.Excel; // ✅ For Excel processing
+using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace Quiz_Application.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext dbContext;
@@ -115,7 +117,6 @@ namespace Quiz_Application.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Refetch the original quiz to keep existing file info
                 var existing = dbContext.Quizzes.FirstOrDefault(q => q.Id == updatedQuiz.Id);
                 if (existing != null)
                 {
@@ -148,7 +149,7 @@ namespace Quiz_Application.Controllers
                 quiz.MethodologyFileName = fileName;
             }
 
-            await dbContext.SaveChangesAsync(); // 🛠️ Use async version
+            await dbContext.SaveChangesAsync();
 
             return RedirectToAction("Index");
         }
@@ -167,7 +168,6 @@ namespace Quiz_Application.Controllers
             var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(methodologyFile.FileName)}";
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", fileName);
 
-            // Ensure uploads directory exists
             Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
 
             using (var stream = new FileStream(filePath, FileMode.Create))
@@ -191,6 +191,9 @@ namespace Quiz_Application.Controllers
             var quiz = await dbContext.Quizzes.Include(q => q.Questions).FirstOrDefaultAsync(q => q.Id == quizId);
             if (quiz == null) return NotFound();
 
+            int importedCount = 0;
+            int skippedCount = 0;
+
             using (var stream = new MemoryStream())
             {
                 await excelFile.CopyToAsync(stream);
@@ -200,23 +203,26 @@ namespace Quiz_Application.Controllers
                     if (worksheet == null)
                         return BadRequest("Excel file is empty or malformed.");
 
-                    int row = 2;
-                    while (!worksheet.Cell(row, 1).IsEmpty())
+                    var rows = worksheet.RowsUsed().Skip(1);
+                    foreach (var r in rows)
                     {
-                        var text = worksheet.Cell(row, 1).GetString().Trim();
+                        var text = r.Cell(1).GetString().Trim();
+                        if (string.IsNullOrEmpty(text)) continue;
+
                         var options = new List<string>
-                {
-                    worksheet.Cell(row, 2).GetString().Trim(),
-                    worksheet.Cell(row, 3).GetString().Trim(),
-                    worksheet.Cell(row, 4).GetString().Trim(),
-                    worksheet.Cell(row, 5).GetString().Trim()
-                };
-
-                        var correctIndexStr = worksheet.Cell(row, 6).GetString().Trim();
-
-                        if (!int.TryParse(correctIndexStr, out int correctIndex) || correctIndex < 0 || correctIndex >= options.Count)
                         {
-                            row++;
+                            r.Cell(2).GetString().Trim(),
+                            r.Cell(3).GetString().Trim(),
+                            r.Cell(4).GetString().Trim(),
+                            r.Cell(5).GetString().Trim()
+                        };
+
+                        var correctIndexStr = r.Cell(6).GetString().Trim();
+                        int correctIndex = ResolveCorrectIndex(correctIndexStr, options);
+
+                        if (correctIndex == -1)
+                        {
+                            skippedCount++;
                             continue;
                         }
 
@@ -237,14 +243,49 @@ namespace Quiz_Application.Controllers
                         };
 
                         dbContext.Questions.Add(question);
-                        row++;
+                        importedCount++;
                     }
 
                     await dbContext.SaveChangesAsync();
                 }
             }
 
+            TempData["ExcelImportMessage"] = $"✅ Successfully imported {importedCount} questions from Excel. ⚠️ Skipped {skippedCount} rows due to invalid correct option formats.";
             return RedirectToAction("ManageQuestions", new { quizId });
+        }
+
+        private static int ResolveCorrectIndex(string input, List<string> options)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return -1;
+            input = input.Trim().ToLowerInvariant();
+
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].Trim().Equals(input, StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+
+            if (double.TryParse(input, out double val))
+            {
+                int index = (int)Math.Round(val);
+                if (index >= 1 && index <= options.Count)
+                {
+                    return index - 1;
+                }
+                if (index >= 0 && index < options.Count)
+                {
+                    return index;
+                }
+            }
+
+            if (input == "a") return 0;
+            if (input == "b") return 1;
+            if (input == "c") return 2;
+            if (input == "d") return 3;
+
+            return -1;
         }
 
 
@@ -280,6 +321,47 @@ namespace Quiz_Application.Controllers
             dbContext.SaveChanges();
 
             return RedirectToAction("EditQuiz", new { id = quizId });
+        }
+
+        [HttpGet]
+        public IActionResult EditQuestion(Guid questionId)
+        {
+            var question = dbContext.Questions
+                .Include(q => q.Options)
+                .FirstOrDefault(q => q.Id == questionId);
+
+            if (question == null) 
+                return NotFound();
+
+            question.Options = question.Options.OrderBy(o => o.Id).ToList();
+
+            ViewBag.QuizId = question.QuizId;
+            ViewBag.CorrectOptionId = question.CorrectOptionId;
+            return View(question);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult EditQuestion(Guid questionId, Guid quizId, string Text, string[] Options, Guid CorrectOptionId)
+        {
+            var question = dbContext.Questions
+                .Include(q => q.Options)
+                .FirstOrDefault(q => q.Id == questionId);
+
+            if (question == null) 
+                return NotFound();
+
+            question.Text = Text.Trim();
+            question.CorrectOptionId = CorrectOptionId;
+
+            var sortedOptions = question.Options.OrderBy(o => o.Id).ToList();
+            for (int i = 0; i < sortedOptions.Count && i < Options.Length; i++)
+            {
+                sortedOptions[i].Text = Options[i].Trim();
+            }
+
+            dbContext.SaveChanges();
+            return RedirectToAction("ManageQuestions", new { quizId });
         }
 
     }

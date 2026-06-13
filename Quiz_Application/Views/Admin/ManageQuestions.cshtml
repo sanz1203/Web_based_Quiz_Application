@@ -1,10 +1,18 @@
-﻿@model List<Quiz_Application.Models.Entities.Question>
+@model List<Quiz_Application.Models.Entities.Question>
 @{
     ViewData["Title"] = "Manage Questions";
     var quizId = ViewBag.QuizId;
 }
 
 <h2>Manage Questions</h2>
+
+@if (TempData["ExcelImportMessage"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @TempData["ExcelImportMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <table class="table table-bordered">
     <thead>

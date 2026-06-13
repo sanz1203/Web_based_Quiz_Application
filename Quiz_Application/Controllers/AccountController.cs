@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Quiz_Application.Models.ViewModels;
 using Quiz_Application.Data;
 using Quiz_Application.Models.Entities;
@@ -22,6 +22,7 @@ namespace Quiz_Application.Controllers
         [HttpGet]
         public IActionResult Register() => View();
 
+
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
@@ -37,14 +38,15 @@ namespace Quiz_Application.Controllers
                 {
                     Email = model.Email,
                     PasswordHash = ComputeHash(model.Password),
-                    IsAdmin = false // Default new users are not admins
+                    IsAdmin = false
                 };
 
                 dbContext.Users.Add(user);
                 dbContext.SaveChanges();
 
-                await SignInUser(user.Email);
-                return RedirectToAction("Index", "Quiz");
+                HttpContext.Session.SetString("IsAdmin", "false");
+                await SignInUser(user.Email, false);
+                return RedirectToAction("All", "Quiz");
             }
 
             return View(model);
@@ -62,14 +64,14 @@ namespace Quiz_Application.Controllers
 
                 if (user != null && user.PasswordHash == ComputeHash(model.Password))
                 {
-                    await SignInUser(user.Email);
+                    HttpContext.Session.SetString("IsAdmin", user.IsAdmin ? "true" : "false");
+                    await SignInUser(user.Email, user.IsAdmin);
 
                     if (user.IsAdmin)
-                        return RedirectToAction("Index", "Admin"); // Admin goes to admin panel
+                        return RedirectToAction("Index", "Admin");
                     else
-                        return RedirectToAction("All", "Quiz");    // Normal users go to quiz list
+                        return RedirectToAction("All", "Quiz");
                 }
-
 
                 ModelState.AddModelError("", "Invalid credentials.");
             }
@@ -79,19 +81,23 @@ namespace Quiz_Application.Controllers
 
         public async Task<IActionResult> Logout()
         {
-            // ✅ Clear "IsAdmin" session on logout
             HttpContext.Session.Remove("IsAdmin");
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login");
         }
 
-        private async Task SignInUser(string email)
+        private async Task SignInUser(string email, bool isAdmin)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, email),
                 new Claim(ClaimTypes.Email, email)
             };
+
+            if (isAdmin)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            }
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);

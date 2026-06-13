@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +38,7 @@ namespace Quiz_Application.Controllers
                 .FirstOrDefault(q => q.Id == id);
 
             if (quiz == null)
-                return NotFound(); // Quiz ID invalid
+                return NotFound();
 
             var now = DateTime.Now;
 
@@ -54,8 +54,7 @@ namespace Quiz_Application.Controllers
                 return View("QuizUnavailable");
             }
 
-            // ✅ Store start time in TempData
-            TempData["StartTime"] = DateTime.Now.ToString("o"); // round-trip format
+            TempData["StartTime"] = DateTime.Now.ToString("o");
             TempData.Keep("StartTime");
 
             var viewModel = new QuizViewModel
@@ -79,28 +78,23 @@ namespace Quiz_Application.Controllers
         [HttpPost]
         public IActionResult Submit(Dictionary<Guid, Guid> userAnswers, Guid quizId)
         {
-            if (userAnswers == null || userAnswers.Count == 0)
-            {
-                ViewBag.Score = 0;
-                ViewBag.TotalScore = 0;
-                ViewBag.ErrorMessage = "No answers were submitted.";
-                return View("Results");
-            }
-
             var questions = dbContext.Questions
-                .Where(q => q.QuizId == quizId && userAnswers.Keys.Contains(q.Id))
+                .Where(q => q.QuizId == quizId)
                 .ToList();
 
             int score = 0;
             int totalQuestions = questions.Count;
 
-            foreach (var question in questions)
+            if (userAnswers != null && userAnswers.Count > 0)
             {
-                if (userAnswers.TryGetValue(question.Id, out var selectedOptionId))
+                foreach (var question in questions)
                 {
-                    if (question.CorrectOptionId == selectedOptionId)
+                    if (userAnswers.TryGetValue(question.Id, out var selectedOptionId))
                     {
-                        score++;
+                        if (question.CorrectOptionId == selectedOptionId)
+                        {
+                            score++;
+                        }
                     }
                 }
             }

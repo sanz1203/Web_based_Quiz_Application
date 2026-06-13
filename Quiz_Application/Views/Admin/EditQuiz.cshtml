@@ -1,4 +1,4 @@
-﻿@model Quiz_Application.Models.Entities.Quiz
+@model Quiz_Application.Models.Entities.Quiz
 
 @{
     ViewData["Title"] = "Edit Quiz";
@@ -55,12 +55,8 @@
                                     </a>
                                 </small>
 
-                                <!-- 🗑️ Delete Methodology Button -->
-                                <form asp-action="DeleteMethodology" asp-controller="Admin" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="quizId" value="@Model.Id" />
-                                    <button type="submit" class="btn btn-sm btn-danger">🗑️ Delete</button>
-                                </form>
+                                <!-- 🗑️ Delete Methodology Button linked to external form -->
+                                <button type="submit" form="deleteMethodologyForm" class="btn btn-sm btn-danger">🗑️ Delete</button>
                             </div>
                         }
                     </div>
@@ -73,6 +69,15 @@
                         <a asp-action="Index" class="btn btn-outline-secondary">↩️ Cancel</a>
                     </div>
                 </form>
+
+                @if (!string.IsNullOrEmpty(Model.MethodologyFileName))
+                {
+                    <!-- Hidden external form to delete methodology to avoid nested forms -->
+                    <form id="deleteMethodologyForm" asp-action="DeleteMethodology" asp-controller="Admin" method="post" style="display:none;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="quizId" value="@Model.Id" />
+                    </form>
+                }
             </div>
         </div>
     </div>

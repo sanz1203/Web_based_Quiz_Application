@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Quiz_Application.Data;
 using Quiz_Application.Models.Entities;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -7,10 +7,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ================== SERVICES ==================
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession();
-builder.Services.AddHttpContextAccessor(); // Required for IHttpContextAccessor
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -20,17 +19,16 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
     });
 
-// ✅ Configure EF Core
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 var app = builder.Build();
 
-// ================== SEED ADMIN USER ==================
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
 
     if (!dbContext.Users.Any(u => u.IsAdmin))
     {
@@ -44,29 +42,29 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// ================== MIDDLEWARE ==================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
-app.UseStaticFiles(); // ✅ Needed for serving uploaded PDFs or styles/scripts
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+app.UseStaticFiles();
 app.UseRouting();
 
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ✅ Route mapping
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();
 
-// ✅ Secure hash function for passwords
 static string ComputeHash(string input)
 {
     using var sha256 = SHA256.Create();

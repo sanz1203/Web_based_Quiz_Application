@@ -1,77 +1,35 @@
-﻿@{
+@{
     ViewData["Title"] = "Quiz Results";
 }
 
-<style>
-    .result-container {
-        max-width: 600px;
-        margin: 50px auto;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-        padding: 40px;
-        text-align: center;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+<div class="container py-5">
+    <div class="card-premium results-card p-5" style="max-width: 600px; margin: 0 auto; text-align: center;">
+        <span class="badge mb-3 px-3 py-2" style="background-color: var(--brand-success-light); color: var(--brand-success); font-weight: 700; border-radius: var(--radius-sm);">🎉 Assessment Completed</span>
+        <h2 class="fw-extrabold mb-1" style="font-size: 2rem; color: var(--text-main); letter-spacing: -0.03em;">Quiz Results</h2>
+        <p class="text-muted mb-4">Your score has been graded automatically.</p>
 
-    .result-title {
-        font-size: 28px;
-        font-weight: 700;
-        color: #333;
-    }
+        <!-- 🏆 Interactive Grade Ring -->
+        <div class="results-circle shadow-sm" style="width: 140px; height: 140px; border-radius: 50%; background: var(--brand-primary-light); border: 4px solid var(--brand-primary); display: flex; align-items: center; justify-content: center; margin: 20px auto 30px auto;">
+            <div class="results-score" style="font-size: 2.25rem; font-weight: 800; color: var(--brand-primary);">
+                @ViewBag.Score<span style="font-size: 1.25rem; font-weight: 600; color: var(--text-muted); margin: 0 4px;">/</span>@ViewBag.TotalScore
+            </div>
+        </div>
 
-    .score-highlight {
-        font-size: 36px;
-        font-weight: 800;
-        color: #4CAF50;
-        margin: 10px 0;
-    }
+        <div class="row g-3 text-start mt-4 mb-5" style="max-width: 420px; margin: 0 auto;">
+            <div class="col-12 border-bottom pb-2 d-flex justify-content-between">
+                <span class="text-muted fw-bold">📅 Start Time</span>
+                <span class="fw-semibold text-light">@(ViewBag.StartTime ?? "N/A")</span>
+            </div>
+            <div class="col-12 border-bottom pb-2 d-flex justify-content-between">
+                <span class="text-muted fw-bold">⏰ End Time</span>
+                <span class="fw-semibold text-light">@(ViewBag.EndTime ?? "N/A")</span>
+            </div>
+            <div class="col-12 border-bottom pb-2 d-flex justify-content-between">
+                <span class="text-muted fw-bold">⌛ Duration</span>
+                <span class="fw-bold text-primary" style="color: var(--brand-primary) !important;">@(ViewBag.Duration ?? "N/A")</span>
+            </div>
+        </div>
 
-    .info-section {
-        margin-top: 30px;
-        text-align: left;
-    }
-
-    .info-item {
-        margin: 10px 0;
-        font-size: 16px;
-    }
-
-        .info-item span {
-            font-weight: 600;
-            color: #444;
-        }
-
-    .retry-btn {
-        margin-top: 30px;
-        background-color: #007bff;
-        border: none;
-        padding: 12px 24px;
-        font-size: 16px;
-        border-radius: 6px;
-        color: white;
-        text-decoration: none;
-        transition: background-color 0.3s ease;
-        display: inline-block;
-    }
-
-        .retry-btn:hover {
-            background-color: #0056b3;
-        }
-</style>
-
-<div class="result-container">
-    <div class="result-title">🎉 Quiz Completed!</div>
-
-    <div class="score-highlight">
-        @ViewBag.Score / @ViewBag.TotalScore
+        <a asp-controller="Quiz" asp-action="All" class="btn-premium px-5 py-3 text-decoration-none d-inline-block" style="background: var(--brand-primary); color: white; border-radius: 12px; font-weight: 600;">📚 Back to Quizzes</a>
     </div>
-
-    <div class="info-section">
-        <div class="info-item"><span>Start Time:</span> @(ViewBag.StartTime ?? "N/A")</div>
-        <div class="info-item"><span>End Time:</span> @(ViewBag.EndTime ?? "N/A")</div>
-        <div class="info-item"><span>Duration:</span> @(ViewBag.Duration ?? "N/A")</div>
-    </div>
-
-    <a asp-controller="Quiz" asp-action="All" class="retry-btn">📚 Back to Quizzes</a>
 </div>
